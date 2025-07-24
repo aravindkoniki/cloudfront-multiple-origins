@@ -7,21 +7,23 @@ exports.handler = (event, context, callback) => {
 
     console.log(JSON.stringify(request.headers))
 
-    const bucket = request.headers['bucket'][0]
+    const customHeader = request.headers['spa-custom-Header'][0]
 
-    console.log('bucket', bucket.value)
+    console.log('spa-custom-Header', customHeader.value)
 
-    let domainName = bucket.value
+    let domainName = customHeader.value
 
     if(domainName){
 
         console.log("Within the if statement", domainName)
-        
+
         request.origin.s3.domainName = domainName
+
+        console.log("updated the request origin with s3 domain", domainName)
 
         request.headers['host'] = [{key: 'host', value: domainName}]
     }
     console.log('updated request', request)
-    // Return the modified request
+
     callback(null, request);
 };

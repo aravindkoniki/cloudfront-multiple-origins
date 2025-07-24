@@ -38,7 +38,7 @@ resource "aws_s3_object" "dev_index" {
 
 
 resource "aws_s3_bucket_policy" "dev_cloudfront_access" {
-  provider = aws.pt_sandbox_test
+  provider = aws.MY_NETWORKING
   bucket   = aws_s3_bucket.dev.id
   policy = jsonencode({
     Version = "2012-10-17"

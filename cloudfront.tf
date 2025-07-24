@@ -1,6 +1,6 @@
 # CloudFront OAC
 resource "aws_cloudfront_origin_access_control" "oac" {
-  provider                          = aws.pt_sandbox_test
+  provider                          = aws.MY_NETWORKING
   name                              = "cloudfront-s3-oac"
   description                       = "OAC for accessing S3 buckets"
   origin_access_control_origin_type = "s3"
@@ -10,7 +10,7 @@ resource "aws_cloudfront_origin_access_control" "oac" {
 
 
 resource "aws_cloudfront_function" "viewer_request_function" {
-  provider = aws.pt_sandbox_test
+  provider = aws.MY_NETWORKING
   name     = "viewer-request-redirect"
   runtime  = "cloudfront-js-2.0"
   comment  = "Redirect based on host header"
@@ -21,7 +21,7 @@ resource "aws_cloudfront_function" "viewer_request_function" {
 
 # CloudFront Distribution
 resource "aws_cloudfront_distribution" "cf" {
-  provider            = aws.pt_sandbox_test
+  provider            = aws.MY_NETWORKING
   enabled             = true
   aliases             = local.cf_alias
   default_root_object = "index.html"
@@ -52,7 +52,7 @@ resource "aws_cloudfront_distribution" "cf" {
     lambda_function_association {
       event_type   = "origin-request"
       lambda_arn   = aws_lambda_function.edge_router.qualified_arn
-      include_body = false
+      include_body = true
     }
   }
 

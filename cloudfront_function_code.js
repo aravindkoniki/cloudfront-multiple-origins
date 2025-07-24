@@ -1,22 +1,52 @@
-import cf from 'cloudfront';
 function handler(event) {
     var request = event.request;
     var headers = request.headers;
-    // Check if host header exists
-    if (headers.host) {
-        console.log("Inside headers.host " + headers.host.value);
+    var uri = request.uri;
 
-        const hostHeader = headers.host.value;
+    const hostHeader = headers.host && headers.host.value;
 
-        if (hostHeader === 'dev.cloudcraftlab.work') {
-            request.headers['spa-custom-Header'] = { value: 'dev-cloudcraftlab-work.s3.eu-west-1.amazonaws.com' };
-            console.log("Inside dev.cloudcraftlab.work");
+    // Config for domains where routing depends on both host and URI
+    const complexOriginMap = {
+        'portal.dev.cloudcraftlab.work': {
+            '/masters': 'dev-masters-cloudcraftlab-work.s3.eu-central-1.amazonaws.com',
+            'default': 'dev-portal-cloudcraftlab-work.s3.eu-central-1.amazonaws.com'
+        }
+    };
 
-        } else if (hostHeader === 'test.cloudcraftlab.work') {
-            request.headers['spa-custom-Header'] = { value: 'test-cloudcraftlab-work.s3.eu-west-1.amazonaws.com' };
-            console.log("Inside test.cloudcraftlab.work");
+    // Simple host-only routing
+    const simpleOriginMap = {
+        'dev.cloudcraftlab.work': 'dev-cloudcraftlab-work.s3.eu-west-1.amazonaws.com',
+        'test.cloudcraftlab.work': 'test-cloudcraftlab-work.s3.eu-west-1.amazonaws.com',
+    };
+
+    // Match complex mapping (host + URI)
+    if (complexOriginMap[hostHeader]) {
+        const routes = complexOriginMap[hostHeader];
+        let matched = false;
+
+        for (let path in routes) {
+            if (path !== 'default' && uri.startsWith(path)) {
+                request.headers['spa-custom-Header'] = { value: routes[path] };
+                matched = true;
+                console.log('Matched host ' + hostHeader + ' with URI ' + uri + ' → ' + routes[path]);
+                break;
+            }
+        }
+
+        // Fallback to default if no path match
+        if (!matched && routes['default']) {
+            request.headers['spa-custom-Header'] = { value: routes['default'] };
+            console.log('No URI match for host ' + hostHeader + ', using default origin ' + routes['default']);
         }
     }
-    console.log("Request updated :", JSON.stringify(request))
+    // Match simple host-only routing
+    else if (simpleOriginMap[hostHeader]) {
+        const origin = simpleOriginMap[hostHeader];
+        request.headers['spa-custom-Header'] = { value: origin };
+        console.log('Matched host ' + hostHeader + ' to origin ' + origin);
+    } else {
+        console.log('No routing match for host: ' + hostHeader);
+    }
+
     return request;
 }

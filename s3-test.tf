@@ -29,7 +29,7 @@ resource "aws_s3_bucket_public_access_block" "spa" {
 }
 
 resource "aws_s3_object" "test_index" {
-  provider     = aws.pt_sandbox_test
+  provider     = aws.MY_NETWORKING
   bucket       = aws_s3_bucket.test.id
   key          = "index.html"
   source       = "s3/test/index.html"
